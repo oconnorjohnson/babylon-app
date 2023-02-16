@@ -8,19 +8,23 @@ const port = 5000;
 
 const { User } = require('./models/user');
 
+// Load environment variables from the .env file
 require('dotenv').config();
 
 // Create an instance of express
 const app = express();
 
+// Define a route for the home page
 app.get('/', (req, res) => {
     res.send('Hello World!')
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
 }); 
 
+// Define middleware for parsing the request body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -37,60 +41,52 @@ const userSchema = new mongoose.Schema({
 });
 
 // Define routes for user authentication and authorization 
-
-// Register a new user
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', async (req, res) => { // Register a new user
     try {
-        const { email, password } = req.body; 
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email });
+        const { email, password } = req.body; // Destructure the email and password from the request body
+        const existingUser = await User.findOne({ email }); // Check if the user already exists
 
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email already in use'})
+        if (existingUser) { // If the user already exists, return an error
+            return res.status(400).json({ message: 'Email already in use'}) // 400 is a bad request
         }
 
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
 
-        // Create a new user
-        const user = new User({
+        const user = new User({ // Create a new user
             email,
             password: hashedPassword
         });
 
-        await user.save();
+        await user.save(); // Save the user to the database
 
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(201).json({ message: 'User registered successfully' }); // 201 is a successful creation
+    } catch (err) { // If there is an error, return a 500 error
+        res.status(500).json({ message: 'Internal server error' }); // 500 is an internal server error
     }
 });
 
 // Login an existing user
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body; // Destructure the email and password from the request body
 
-        // Check if the user exists
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }); // Check if the user exists
 
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (!user) { // If the user does not exist, return an error
+            return res.status(400).json({ message: 'Invalid credentials' }); // 400 is a bad request
         }
 
-        // Check if the password is correct
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        const passwordMatch = await bcrypt.compare(password, user.password); // Check if the password matches
 
-        if (!passwordMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (!passwordMatch) { // If the password does not match, return an error
+            return res.status(400).json({ message: 'Invalid credentials' }); // 400 is a bad request
         }
 
-        // Generate a JSON Web Token (JWT)
-        const token = jwt.sign({ email: user.email }, 'secret-key', { expiresIn: '1h' });
+        const token = jwt.sign({ email: user.email }, 'secret-key', { expiresIn: '1h' }); // Create a JWT token
 
-        res.json({ token });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error' });
+        res.json({ token }); // Return the token
+    } catch (err) { // If there is an error, return a 500 error
+        res.status(500).json({ message: 'Internal server error' }); // 500 is an internal server error
     }
 });
 
