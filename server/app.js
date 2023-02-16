@@ -8,6 +8,8 @@ const port = 5000;
 
 const { User } = require('./models/user');
 
+require('dotenv').config();
+
 // Create an instance of express
 const app = express();
 
@@ -23,6 +25,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Connect to MongoDB via Mongoose 
+mongoose.connect('mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}', { useNewUrlParser: true })
 mongoose.connect('mongodb+srv://oconnorjohnson:C19lrEdkHaFqdbLF@babylon-cluster-0.z3nlhad.mongodb.net/?retryWrites=true&w=majority', { useNewUrlParser: true })
     .then(() => console.log('Connected to MongoDB...'))
     .catch(err => console.error('Could not connect to MongoDB...'));
